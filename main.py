@@ -1,51 +1,8 @@
 from fasthtml.common import *
-from dataclasses import dataclass
-from ghapi.all import GhApi
-from os import getenv
-# TODO add RSS aggregate of data
-
-
-GITHUB_TOKEN = getenv("RELEASES_GH_TOKEN")
+from core import *
 
 app, rt = fast_app(hdrs=(MarkdownJS(),))
 
-db = Database('data/releases.db')
-
-PROJECTS = (
-    ('answerdotai', 'fasthtml'),
-    ('answerdotai', 'fastlite'),
-    ('answerdotai', 'fa6-icons'),
-    ('answerdotai', 'sqlite-minutils'),
-    ('answerdotai', 'surreal'),
-    ('fastai', 'fastai'),
-    ('fastai', 'fastcore'),
-    ('fastai', 'nbdev'),
-)
-
-@dataclass
-class Release: id: int; url: str; tag_name: str; published_at: str; body: str; owner: str; repo: str
-
-releasesdb = db.create(Release)
-
-
-def fetch_github_releases() -> list[dict]:
-    # TODO: consider replacing with RSS feed subscriber
-    for project in PROJECTS:
-        owner, repo = project
-        for release in GhApi(owner=owner, repo=repo, token=GITHUB_TOKEN).repos.list_releases():
-            if release['id'] not in releasesdb:
-                rel = dict(
-                    id = release['id'],
-                    url = release['html_url'],
-                    tag_name = release['tag_name'],
-                    published_at = release['published_at'],
-                    body = release['body'],
-                    owner = owner,
-                    repo = repo
-                )
-                releasesdb.insert(**rel)
-                yield rel
-                
 
 @rt('/update')
 def get():
