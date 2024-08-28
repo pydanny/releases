@@ -2,13 +2,12 @@ from fasthtml.common import *
 from dataclasses import dataclass
 from ghapi.all import GhApi
 from os import getenv
+# TODO add RSS aggregate of data
 
 
 GITHUB_TOKEN = getenv("RELEASES_GH_TOKEN")
 
 app, rt = fast_app(hdrs=(MarkdownJS(),))
-
-setup_toasts(app)
 
 db = Database('data/releases.db')
 
@@ -49,11 +48,11 @@ def fetch_github_releases() -> list[dict]:
                 
 
 @rt('/update')
-def get(session):
-    # TODO: replace with webhook receiver
-    for rel in fetch_github_releases():
-        add_toast(session, f"Release {rel['tag_name']} for {rel['owner']}/{rel['repo']}", "info")
-    return RedirectResponse("/")
+def get():
+    return Titled("Releases added", 
+        Div(*[Release(o) for o in fetch_github_releases()]),
+        P(A("Back", href="/"))
+    )
 
 
 def Release(release):
@@ -71,20 +70,22 @@ def Projects():
 @rt('/')
 def index(session):
     return Titled("Releases @ answer.ai & fast.ai",
+        Div(hx_boost="true")(
             Projects(),
             Div(*[Release(o) for o in releasesdb(order_by='published_at desc')]),
             P(A("Github repo", href="https://github.com/pydanny/releases"))
-
+        )
     )
 
 @rt("/{owner:str}/{repo:str}")
 def releases(session, owner: str, repo: str):
-    # TODO turn into HTMX fragment
     Projects(),    
     return Titled(f"Releases for {owner}/{repo}",
+        Div(hx_boost="true")(                  
             Projects(),                  
             Div(Release(o) for o in releasesdb(where=f"repo='{repo}'", order_by='published_at desc')),
             P(A("Github repo", href="https://github.com/pydanny/releases"))
+        )
     )
     
 
