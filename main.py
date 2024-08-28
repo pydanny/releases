@@ -1,6 +1,5 @@
 from fasthtml.common import *
 from dataclasses import dataclass
-import pathlib
 from ghapi.all import GhApi
 from os import getenv
 
@@ -16,6 +15,8 @@ db = Database('data/releases.db')
 PROJECTS = (
     ('answerdotai', 'fasthtml'),
     ('answerdotai', 'fastlite'),
+    ('answerdotai', 'sqlite-minutils'),
+    ('fastai', 'fastcore'),
 )
 
 @dataclass
@@ -24,12 +25,13 @@ class Release: id: int; url: str; tag_name: str; published_at: str; body: str; o
 releasesdb = db.create(Release)
 
 
-def get_github_releases(session) -> list:
+def fetch_github_releases(session) -> list[dict]:
+    # TODO: consider replacing with RSS feed subscriber
     for project in PROJECTS:
         owner, repo = project
         for release in GhApi(owner=owner, repo=repo, token=GITHUB_TOKEN).repos.list_releases():
             if release['id'] not in releasesdb:
-                releasesdb.insert(Release(
+                rel = dict(
                     id = release['id'],
                     url = release['html_url'],
                     tag_name = release['tag_name'],
@@ -37,13 +39,16 @@ def get_github_releases(session) -> list:
                     body = release['body'],
                     owner = owner,
                     repo = repo
-                ))
-                add_toast(session, f"Release {release['tag_name']} for {owner}/{repo}", "info")
+                )
+                releasesdb.insert(**rel)
+                yield rel
+                
 
 @rt('/update')
 def get(session):
     # TODO: replace with webhook receiver
-    get_github_releases(session)
+    for rel in fetch_github_releases(session):
+        add_toast(session, f"Release {rel['tag_name']} for {rel['owner']}/{rel['repo']}", "info")
     return RedirectResponse("/")
 
 
