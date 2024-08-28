@@ -15,8 +15,12 @@ db = Database('data/releases.db')
 PROJECTS = (
     ('answerdotai', 'fasthtml'),
     ('answerdotai', 'fastlite'),
+    ('answerdotai', 'fa6-icons'),
     ('answerdotai', 'sqlite-minutils'),
+    ('answerdotai', 'surreal'),
+    ('fastai', 'fastai'),
     ('fastai', 'fastcore'),
+    ('fastai', 'nbdev'),
 )
 
 @dataclass
