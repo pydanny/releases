@@ -18,8 +18,10 @@ jobs:
         run: railway run --service {{SERVICE_ID}} pip install -r requirements.txt
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          SERVICE_ID: ${{secrets.SERVICE_ID}}
 
       - name: My Command
         run: railway run --service {{SERVICE_ID}} python core.py
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          SERVICE_ID: ${{secrets.SERVICE_ID}}
