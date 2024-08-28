@@ -2,7 +2,7 @@ name: fetch_releases
 
 on:
   schedule:
-    - cron: '*/4 * * * *'
+    - cron: '*/5 * * * *'
 
 jobs:
   build:
@@ -15,11 +15,11 @@ jobs:
         run: npm i -g @railway/cli
 
       - name: Install Python packages
-        run: railway run --service {{SERVICE_ID}} pip install -r requirements.txt
+        run: railway run --service {{secrets.SERVICE_ID}} pip install -r requirements.txt
         env:
-          RAILWAY_TOKEN: ${{ RAILWAY_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
       - name: My Command
         run: railway run --service {{SERVICE_ID}} python core.py
         env:
-          RAILWAY_TOKEN: ${{ RAILWAY_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
