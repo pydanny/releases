@@ -25,7 +25,7 @@ class Release: id: int; url: str; tag_name: str; published_at: str; body: str; o
 releasesdb = db.create(Release)
 
 
-def fetch_github_releases(session) -> list[dict]:
+def fetch_github_releases() -> list[dict]:
     # TODO: consider replacing with RSS feed subscriber
     for project in PROJECTS:
         owner, repo = project
@@ -47,7 +47,7 @@ def fetch_github_releases(session) -> list[dict]:
 @rt('/update')
 def get(session):
     # TODO: replace with webhook receiver
-    for rel in fetch_github_releases(session):
+    for rel in fetch_github_releases():
         add_toast(session, f"Release {rel['tag_name']} for {rel['owner']}/{rel['repo']}", "info")
     return RedirectResponse("/")
 
@@ -68,7 +68,9 @@ def Projects():
 def index(session):
     return Titled("Releases @ answer.ai & fast.ai",
             Projects(),
-            Div(*[Release(o) for o in releasesdb(order_by='published_at desc')])
+            Div(*[Release(o) for o in releasesdb(order_by='published_at desc')]),
+            P(A("Github repo", href="https://github.com/pydanny/releases"))
+
     )
 
 @rt("/{owner:str}/{repo:str}")
@@ -77,7 +79,8 @@ def releases(session, owner: str, repo: str):
     Projects(),    
     return Titled(f"Releases for {owner}/{repo}",
             Projects(),                  
-            Div(Release(o) for o in releasesdb(where=f"repo='{repo}'", order_by='published_at desc'))
+            Div(Release(o) for o in releasesdb(where=f"repo='{repo}'", order_by='published_at desc')),
+            P(A("Github repo", href="https://github.com/pydanny/releases"))
     )
     
 

@@ -1,6 +1,6 @@
 # Releases
 
-An easy-to-follow release system for an org or project.
+An easy-to-follow release system for an org or project. Deployed [here](https://releases-production-5471.up.railway.app).
 
 ## Installation
 
