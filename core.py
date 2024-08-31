@@ -1,7 +1,8 @@
 from fasthtml.common import *
 from dataclasses import dataclass
 from ghapi.all import GhApi
-from os import getenv
+from pathlib import Path
+import os
 
 __all__ = ['fetch_github_releases', 'Release', 'PROJECTS', 'releasesdb']
 
@@ -18,14 +19,17 @@ PROJECTS = (
 
 db = Database('data/releases.db')
 
-GITHUB_TOKEN = getenv("RELEASES_GH_TOKEN")
+GITHUB_TOKEN = os.environ.get('RELEASES_GH_TOKEN', None)
+if GITHUB_TOKEN is None:
+    env = parse_env(Path('.env').read_text())
+    GITHUB_TOKEN = env['RELEASES_GH_TOKEN']
 
 @dataclass
 class Release: id: int; url: str; tag_name: str; published_at: str; body: str; owner: str; repo: str
 
 releasesdb = db.create(Release)
 
-def fetch_github_releases() -> list[dict]:
+async def fetch_github_releases() -> list[dict]:
     for project in PROJECTS:
         owner, repo = project
         for release in GhApi(owner=owner, repo=repo, token=GITHUB_TOKEN).repos.list_releases():
@@ -39,8 +43,9 @@ def fetch_github_releases() -> list[dict]:
                     owner = owner,
                     repo = repo
                 )
-                releasesdb.insert(**rel)
-                yield rel
+                release = releasesdb.insert(**rel)
+                print(release)
+                yield release
 
 if __name__ == '__main__':
     for release in fetch_github_releases():
