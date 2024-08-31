@@ -43,9 +43,7 @@ async def fetch_github_releases() -> list[dict]:
                     owner = owner,
                     repo = repo
                 )
-                release = releasesdb.insert(**rel)
-                print(release)
-                yield release
+                yield releasesdb.insert(**rel)
 
 if __name__ == '__main__':
     for release in fetch_github_releases():
