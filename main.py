@@ -12,7 +12,8 @@ app, rt = fast_app(hdrs=(MarkdownJS(), sselink))
 def get():
     return Titled("Releases added", 
         Div(hx_ext="sse", sse_connect="/update-fragment",
-            hx_swap="beforeend show:bottom", sse_swap="VersionUpdate", id="message-container",),
+            hx_swap="beforeend show:bottom",
+            sse_swap="VersionUpdate", id="message-container",),
         P(A("Back", href="/"))
     )
 
@@ -21,7 +22,7 @@ async def version_generator():
         async for release in fetch_github_releases():
             yield {"data": to_xml(Release(release)), "event": "VersionUpdate"}
             await asyncio.sleep(1)
-        await asyncio.sleep(1)
+        await asyncio.sleep(10)
         yield {"data": "", "event": "VersionUpdate"}
 
 @rt('/update-fragment')
