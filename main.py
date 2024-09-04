@@ -1,7 +1,6 @@
 import asyncio
 from fasthtml.common import *
 from core import *
-from sse_starlette.sse import EventSourceResponse
 
 sselink = Script(src="https://unpkg.com/htmx-ext-sse@2.2.1/sse.js")
 
@@ -13,21 +12,21 @@ def get():
     return Titled("Releases added", 
         Div(hx_ext="sse", sse_connect="/update-fragment",
             hx_swap="beforeend show:bottom",
-            sse_swap="VersionUpdate", id="message-container",),
+            sse_swap="message", id="message-container",),
         P(A("Back", href="/"))
     )
 
+shutdown_event = signal_shutdown()
+
 async def version_generator():
-    while True:
-        async for release in fetch_github_releases():
-            yield {"data": to_xml(Release(release)), "event": "VersionUpdate"}
-            await asyncio.sleep(1)
-        await asyncio.sleep(10)
-        yield {"data": "", "event": "VersionUpdate"}
+    # while not shutdown_event.is_set():
+    async for release in fetch_github_releases():
+        yield sse_message(Release(release))
+        await asyncio.sleep(1)
 
 @rt('/update-fragment')
 async def get():
-    return EventSourceResponse(version_generator(), media_type="text/event-stream")
+    return EventStream(version_generator())
 
 
 def Release(release):
