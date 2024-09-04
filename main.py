@@ -53,6 +53,7 @@ def index():
     return Titled("Releases @ answer.ai & fast.ai",
         Div(hx_boost="true")(
             Projects(),
+            P("Latest releases:"),
             Div(*[Release(o, all=True) for o in releases]),
             P(
                 A("Github repo", href="https://github.com/pydanny/releases"),
