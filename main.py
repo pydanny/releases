@@ -29,9 +29,12 @@ async def get():
     return EventStream(version_generator())
 
 
-def Release(release):
+def Release(release, all=False):
+    links = [A(f"{release.owner}/{release.repo} {release.tag_name}", href=release.url)]
+    if all:
+        links.append(Small(A("(all releases)", href=f"/{release.owner}/{release.repo}")))
     return Article(
-        H2(A(f"{release.owner}/{release.repo} {release.tag_name}", href=release.url)),
+        H2(*links),
         P(Strong(release.published_at)),
         Div(cls='marked')(release.body)
     )  
@@ -42,11 +45,15 @@ def Projects():
 
 
 @rt('/')
-def index(session):
+def index():
+    releases = []
+    for _, repo in PROJECTS:
+        releases.append(releasesdb(where=f"repo='{repo}'", order_by='published_at desc')[0])
+    releases = sorted(releases, key=lambda r: r.published_at, reverse=True)
     return Titled("Releases @ answer.ai & fast.ai",
         Div(hx_boost="true")(
             Projects(),
-            Div(*[Release(o) for o in releasesdb(order_by='published_at desc')]),
+            Div(*[Release(o, all=True) for o in releases]),
             P(
                 A("Github repo", href="https://github.com/pydanny/releases"),
                 A("Update", href='/update'),
@@ -55,7 +62,7 @@ def index(session):
     )
 
 @rt("/{owner:str}/{repo:str}")
-def releases(session, owner: str, repo: str):
+def releases(owner: str, repo: str):
     Projects(),    
     return Titled(f"Releases for {owner}/{repo}",
         Div(hx_boost="true")(                  
