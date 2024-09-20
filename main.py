@@ -39,9 +39,11 @@ def Release(release, all=False):
         Div(cls='marked')(release.body)
     )  
 
+def S(e):
+    return Span(e, ' ')
+
 def Projects():
-    # TODO: replace with HTMX-powered fetching
-    return P(A("all", href="/"), *[A(f"{owner}/{repo}", href=f"/{owner}/{repo}") for owner, repo in PROJECTS])
+    return P(S(A("all", href="/")), *[S(A(f"{owner}/{repo}", href=f"/{owner}/{repo}")) for owner, repo in PROJECTS])
 
 
 @rt('/')
@@ -56,7 +58,7 @@ def index():
             P("Latest releases:"),
             Div(*[Release(o, all=True) for o in releases]),
             P(
-                A("Github repo", href="https://github.com/pydanny/releases"),
+                S(A("Github repo", href="https://github.com/pydanny/releases")),
                 A("Update", href='/update'),
             ),
         )
