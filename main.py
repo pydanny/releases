@@ -48,13 +48,9 @@ def S(e):
 def Projects():
     return P(S(A("all", href="/")), *[S(A(f"{owner}/{repo}", href=f"/{owner}/{repo}")) for owner, repo in PROJECTS])
 
-
-def _split_into_pairs(items):
-    return [items[i:i+2] for i in range(0, len(items), 2)]
-
 def _gridify_releases(releases):
     grids = []
-    for pair in _split_into_pairs(releases):
+    for pair in chunked(releases, chunk_sz=2):
         grids.append(Div(cls='grid')(
             *[Div(cls='cell')(Release(o)) for o in pair]
         ))
