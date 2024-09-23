@@ -1,6 +1,7 @@
 import asyncio
 from fasthtml.common import *
 from core import *
+# from fa6_icons import svgs as icons
 
 sselink = Script(src="https://unpkg.com/htmx-ext-sse@2.2.1/sse.js")
 
@@ -29,13 +30,15 @@ async def get():
     return EventStream(version_generator())
 
 
-def Release(release, all=False):
-    links = [A(f"{release.owner}/{release.repo} {release.tag_name}", href=release.url)]
-    if all:
-        links.append(Small(A("(all releases)", href=f"/{release.owner}/{release.repo}")))
+def Release(release):
+
     return Article(
-        H2(*links),
-        P(Strong(release.published_at)),
+        Header(
+            Span(style="float: right;")(Small(A("(all releases)", href=f"/{release.owner}/{release.repo}"))),            
+            H2(A(f"{release.owner}/{release.repo} {release.tag_name}", href=release.url )),
+            P(Strong(release.published_at)),
+            
+        ),
         Div(cls='marked')(release.body)
     )  
 
@@ -46,17 +49,30 @@ def Projects():
     return P(S(A("all", href="/")), *[S(A(f"{owner}/{repo}", href=f"/{owner}/{repo}")) for owner, repo in PROJECTS])
 
 
+def _split_into_pairs(items):
+    return [items[i:i+2] for i in range(0, len(items), 2)]
+
+def _gridify_releases(releases):
+    grids = []
+    for pair in _split_into_pairs(releases):
+        grids.append(Div(cls='grid')(
+            *[Div(cls='cell')(Release(o)) for o in pair]
+        ))
+    return grids
+
 @rt('/')
 def index():
     releases = []
     for _, repo in PROJECTS:
         releases.append(releasesdb(where=f"repo='{repo}'", order_by='published_at desc')[0])
     releases = sorted(releases, key=lambda r: r.published_at, reverse=True)
+
+
     return Titled("Releases @ answer.ai & fast.ai",
         Div(hx_boost="true")(
             Projects(),
             P("Latest releases:"),
-            Div(*[Release(o, all=True) for o in releases]),
+            *_gridify_releases(releases),
             P(
                 S(A("Github repo", href="https://github.com/pydanny/releases")),
                 A("Update", href='/update'),
@@ -67,10 +83,11 @@ def index():
 @rt("/{owner:str}/{repo:str}")
 def releases(owner: str, repo: str):
     Projects(),    
+    releases = releasesdb(where=f"repo='{repo}'", order_by='published_at desc')
     return Titled(f"Releases for {owner}/{repo}",
         Div(hx_boost="true")(                  
             Projects(),                  
-            Div(Release(o) for o in releasesdb(where=f"repo='{repo}'", order_by='published_at desc')),
+            *_gridify_releases(releases),
             P(A("Github repo", href="https://github.com/pydanny/releases"))
         )
     )
