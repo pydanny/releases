@@ -1,20 +1,28 @@
 import asyncio
 from fasthtml.common import *
 from core import *
-# from fa6_icons import svgs as icons
+from fh_frankenui.core import *
 
 sselink = Script(src="https://unpkg.com/htmx-ext-sse@2.2.1/sse.js")
 
-app, rt = fast_app(hdrs=(MarkdownJS(), sselink))
+app, rt = fast_app(hdrs=(MarkdownJS(), sselink, Theme.blue.headers()), pico=False)
 
 
 @rt('/update')
 def get():
-    return Titled("Releases added", 
-        Div(hx_ext="sse", sse_connect="/update-fragment",
-            hx_swap="beforeend show:bottom",
-            sse_swap="message", id="message-container",),
-        P(A("Back", href="/"))
+    return (
+        Container(
+            H1("Releases added"),            
+            Grid(hx_ext="sse", sse_connect="/update-fragment",
+                hx_swap="beforeend show:bottom",
+                sse_swap="message", id="message-container",
+                cls=('gap-x-5 gap-y-5 lg:grid-cols-3 md:grid-cols-2'),
+                cols=1,
+                uk_grid="masonry: next"
+            ),
+            UkIconLink('chevrons-left', href=index),
+            cls=[ContainerT.xlarge, 'space-y-5 mb-20']
+        )
     )
 
 shutdown_event = signal_shutdown()
@@ -31,30 +39,28 @@ async def get():
 
 
 def Release(release):
-
-    return Article(
-        Header(
-            Span(style="float: right;")(Small(A("(all releases)", href=f"/{release.owner}/{release.repo}"))),            
-            H2(A(f"{release.owner}/{release.repo} {release.tag_name}", href=release.url )),
-            P(Strong(release.published_at)),
-            
+    return Card(
+        Div(render_md(release.body)),
+        header=FullySpacedDiv(
+            Div(
+                H2(A(f"{release.owner}/{release.repo} {release.tag_name}", href=release.url )),
+                P(release.published_at, cls=TextFont.muted_sm),
+                P(A(f"All releases for {release.repo}", href=f"/{release.owner}/{release.repo}", cls=AT.muted))
+            ),
+            Div(UkIconLink('github', button=True, href=release.url, cls=ButtonT.primary))
         ),
-        Div(cls='marked')(release.body)
+
     )  
 
 def S(e):
     return Span(e, ' ')
 
-def Projects():
-    return P(S(A("all", href="/")), *[S(A(f"{owner}/{repo}", href=f"/{owner}/{repo}")) for owner, repo in PROJECTS])
-
-def _gridify_releases(releases):
-    grids = []
-    for pair in chunked(releases, chunk_sz=2):
-        grids.append(Div(cls='grid')(
-            *[Div(cls='cell')(Release(o)) for o in pair]
-        ))
-    return grids
+def Releases(releases):
+    return Grid(
+            *[Release(r) for r in releases],
+            cls=('gap-x-5 gap-y-5 lg:grid-cols-3 md:grid-cols-2'),
+            cols=1
+    )
 
 @rt('/')
 def index():
@@ -62,29 +68,32 @@ def index():
     for _, repo in PROJECTS:
         releases.append(releasesdb(where=f"repo='{repo}'", order_by='published_at desc')[0])
     releases = sorted(releases, key=lambda r: r.published_at, reverse=True)
-
-
-    return Titled("Releases @ answer.ai & fast.ai",
-        Div(hx_boost="true")(
-            Projects(),
-            P("Latest releases:"),
-            *_gridify_releases(releases),
-            P(
-                S(A("Github repo", href="https://github.com/pydanny/releases")),
-                A("Update", href='/update'),
+    return (
+        Container(
+            H1("Releases @ answer.ai & fast.ai"),
+            Div(
+                Releases(releases),
+                P(
+                    S(A("Github repo", href="https://github.com/pydanny/releases")),
+                    A("Update", href='/update'),
+                ),
             ),
+            hx_boost="true",
+            cls=[ContainerT.xlarge, 'space-y-5 mb-20']
         )
+
     )
 
 @rt("/{owner:str}/{repo:str}")
 def releases(owner: str, repo: str):
-    Projects(),    
     releases = releasesdb(where=f"repo='{repo}'", order_by='published_at desc')
-    return Titled(f"Releases for {owner}/{repo}",
-        Div(hx_boost="true")(                  
-            Projects(),                  
-            *_gridify_releases(releases),
-            P(A("Github repo", href="https://github.com/pydanny/releases"))
+    return (
+        Container(                  
+            H1(f"Releases for {owner}/{repo}"),              
+            Releases(releases),
+            LAlignedDiv(UkIconLink('chevrons-left', href=index), A("Github repo", href="https://github.com/pydanny/releases")),
+            hx_boost="true",
+            cls=[ContainerT.xlarge, 'space-y-5 mb-20']
         )
     )
     
