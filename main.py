@@ -78,7 +78,6 @@ def index():
                     A("Update", href='/update'),
                 ),
             ),
-            hx_boost="true",
             cls=[ContainerT.xlarge, 'space-y-5 mb-20']
         )
 
@@ -92,7 +91,6 @@ def releases(owner: str, repo: str):
             H1(f"Releases for {owner}/{repo}"),              
             Releases(releases),
             LAlignedDiv(UkIconLink('chevrons-left', href=index), A("Github repo", href="https://github.com/pydanny/releases")),
-            hx_boost="true",
             cls=[ContainerT.xlarge, 'space-y-5 mb-20']
         )
     )
