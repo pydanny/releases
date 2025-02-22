@@ -1,4 +1,5 @@
 python-fasthtml
 ghapi
 markdown2
-fh_frankenui @ git+https://github.com/answerdotai/fh-frankenui
+fh_frankenui @ git+https://github.com/answerdotai/monsterui
+feedparser

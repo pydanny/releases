@@ -1,11 +1,12 @@
 import asyncio
 from fasthtml.common import *
 from core import *
-from fh_frankenui.core import *
+from monsterui.all import *
 
 sselink = Script(src="https://unpkg.com/htmx-ext-sse@2.2.1/sse.js")
+hdrs = [MarkdownJS(), sselink] + Theme.blue.headers()
 
-app, rt = fast_app(hdrs=(MarkdownJS(), sselink, Theme.blue.headers()), pico=False)
+app, rt = fast_app(hdrs=hdrs, pico=False)
 
 
 @rt('/update')
@@ -21,7 +22,6 @@ def get():
                 uk_grid="masonry: next"
             ),
             UkIconLink('chevrons-left', href=index),
-            cls=[ContainerT.xlarge, 'space-y-5 mb-20']
         )
     )
 
@@ -41,13 +41,12 @@ async def get():
 def Release(release):
     return Card(
         Div(render_md(release.body)),
-        header=FullySpacedDiv(
+        header=Div(
             Div(
                 H2(A(f"{release.owner}/{release.repo} {release.tag_name}", href=release.url )),
-                P(release.published_at, cls=TextFont.muted_sm),
+                P(release.published_at),
                 P(A(f"All releases for {release.repo}", href=f"/{release.owner}/{release.repo}", cls=AT.muted))
             ),
-            Div(UkIconLink('github', button=True, href=release.url, cls=ButtonT.primary))
         ),
 
     )  
@@ -66,7 +65,9 @@ def Releases(releases):
 def index():
     releases = []
     for _, repo in PROJECTS:
-        releases.append(releasesdb(where=f"repo='{repo}'", order_by='published_at desc')[0])
+        # Only append if there's releases listed for something
+        try: releases.append(releasesdb(where=f"repo='{repo}'", order_by='published_at desc')[0])
+        except IndexError: continue
     releases = sorted(releases, key=lambda r: r.published_at, reverse=True)
     return (
         Container(
@@ -78,7 +79,7 @@ def index():
                     A("Update", href='/update'),
                 ),
             ),
-            cls=[ContainerT.xlarge, 'space-y-5 mb-20']
+            # cls=[ContainerT.xlarge, 'space-y-5 mb-20']
         )
 
     )

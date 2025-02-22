@@ -13,8 +13,9 @@ PROJECTS = (
     ('answerdotai', 'sqlite-minutils'),
     ('answerdotai', 'surreal'),
     ('fastai', 'fastai'),
-    ('fastai', 'fastcore'),
-    ('fastai', 'nbdev'),
+    ('answerdotai', 'fastcore'),
+    ('answerdotai', 'nbdev'),
+    ('answerdotai', 'nbz')
 )
 
 db = Database('data/releases.db')

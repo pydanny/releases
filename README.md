@@ -17,3 +17,15 @@ Set the PROJECTS structure to what you want to observe. Then run:
 ```
 python main.py
 ```
+
+## New model
+
+@dataclass
+class Item:
+    id: int
+    url: str
+    tag_name: str
+    published_at: str
+    body: str
+    owner: str
+    repo: str
